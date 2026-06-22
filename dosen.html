@@ -31,7 +31,7 @@
 <body>
 
 <div class="container">
-    <h1>SILAHKAN SCAN UNTUK PRESENSI</h1>
+    <h1>SILAHKAN SCAN UNTENSY</h1>
     <p style="font-size: 16px; color: #666;">Rentang NIM Valid: <strong>H1H025001 - H1H025035</strong></p>
     
     <div id="qrcode"></div>
@@ -72,10 +72,11 @@
         height: 250
     });
 
-    // Array lokal penampung data mahasiswa hadir
-    let listHadir = [];
+    // 2. LOAD DATA AWAL DARI MEMORI BROWSER (LOCALSTORAGE)
+    // Jika sebelumnya sudah ada data tersimpan, pakai data itu. Jika kosong, buat array baru []
+    let listHadir = JSON.parse(localStorage.getItem('databaseKelas')) || [];
 
-    // 2. FUNGSI UNTUK MERENDER ULANG TABEL
+    // 3. FUNGSI UNTUK MERENDER ULANG TABEL
     function perbaruiTabel() {
         const tbody = document.getElementById('tabelPresensi');
         const totalHadirTxt = document.getElementById('totalHadir');
@@ -105,19 +106,19 @@
         });
     }
 
-    // 3. FUNGSI MENGHAPUS SATU BARIS SPESIFIK
+    // 4. FUNGSI MENGHAPUS SATU BARIS SPESIFIK & UPDATE MEMORI
     function hapusBaris(index) {
         const mhsDihapus = listHadir[index];
         if (confirm(`Apakah Anda yakin ingin menghapus presensi ${mhsDihapus.nama} (${mhsDihapus.nim})?`)) {
-            // Hapus data dari array berdasarkan indexnya
             listHadir.splice(index, 1);
             
-            // Perbarui tampilan tabel
+            // Simpan perubahan ke memori setelah dihapus
+            localStorage.setItem('databaseKelas', JSON.stringify(listHadir));
             perbaruiTabel();
         }
     }
 
-    // 4. FUNGSI MENGHAPUS SELURUH DAFTAR HADIR
+    // 5. FUNGSI MENGHAPUS SELURUH DAFTAR HADIR & KOSONGKAN MEMORI
     function hapusSemuaPresensi() {
         if (listHadir.length === 0) {
             alert("Tabel memang sudah kosong!");
@@ -125,12 +126,14 @@
         }
         
         if (confirm("Apakah Anda yakin ingin mengosongkan seluruh daftar hadir kelas ini?")) {
-            listHadir = []; // Kosongkan array
-            perbaruiTabel(); // Perbarui tampilan tabel
+            listHadir = []; 
+            // Hapus data kunci 'databaseKelas' dari memori
+            localStorage.removeItem('databaseKelas');
+            perbaruiTabel(); 
         }
     }
 
-    // 5. MENDENGARKAN SINYAL DARI HALAMAN SCAN MAHASISWA
+    // 6. MENDENGARKAN SINYAL SCAN MAHASISWA & SIMPAN OTOMATIS
     window.addEventListener('storage', function(e) {
         if (e.key === 'userSession' && e.newValue) {
             const dataBaru = JSON.parse(e.newValue);
@@ -147,11 +150,14 @@
                     waktu: jamMenitDetik
                 });
                 
+                // SIMPAN ARRAY DATA HADIR TERBARU KE LOCALSTORAGE
+                localStorage.setItem('databaseKelas', JSON.stringify(listHadir));
                 perbaruiTabel();
             }
         }
     });
 
+    // Jalankan perbarui tabel pertama kali saat web dibuka/di-refresh
     perbaruiTabel();
 </script>
 
