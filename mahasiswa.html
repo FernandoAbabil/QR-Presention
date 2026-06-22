@@ -35,7 +35,7 @@
     const sessionData = localStorage.getItem('userSession');
     if (!sessionData) {
         alert("Akses ditolak! Anda harus login terlebih dahulu.");
-        window.location.href = 'login.html';
+        window.location.href = 'index.html';
     }
 
     // 2. PARSE DATA LOGIN KE HALAMAN
@@ -86,7 +86,7 @@
     // 4. FUNGSI LOGOUT
     function logout() {
         localStorage.removeItem('userSession');
-        window.location.href = 'login.html';
+        window.location.href = 'index.html';
     }
 </script>
 </body>
