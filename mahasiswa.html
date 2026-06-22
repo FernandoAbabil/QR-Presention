@@ -1,93 +1,73 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scan Presensi Mahasiswa</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f9; }
-        .container { background: white; padding: 20px; max-width: 450px; margin: 0 auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        #reader { width: 100%; margin: 0 auto; }
-        .info { margin-top: 20px; font-weight: bold; color: green; font-size: 18px; }
-        .logout-btn { margin-top: 20px; padding: 8px 15px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    </style>
-</head>
-<body>
+<script src="https://unpkg.com/html5-qrcode"></script>
 
-<div class="container">
-    <h2>Sistem Presensi QR Code</h2>
-    
-    <div style="margin-bottom: 20px; background: #e9ecef; padding: 10px; border-radius: 4px; text-align: left;">
-        <p style="margin: 5px 0;">👤 Nama: <strong id="txtNama">-</strong></p>
-        <p style="margin: 5px 0;">🆔 NIM: <strong id="txtNim">-</strong></p>
-        <p style="margin: 5px 0;">📧 Email: <strong id="txtEmail">-</strong></p>
-    </div>
+<script type="module">
+    // 1. IMPORT FIREBASE CDN MODUL (VERSI WEB STATIS)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    <div id="reader"></div>
-    <div id="result" class="info"></div>
-    
-    <button class="logout-btn" onclick="logout()">Log Out</button>
-</div>
+    // 2. CONFIG CONFIGURASI FIREBASE MILIKMU
+    const firebaseConfig = {
+        apiKey: "AIzaSyBD9E45AQWXbsy_D1IwGkYWlt4soelcITg",
+        authDomain: "qr-presention.firebaseapp.com",
+        databaseURL: "https://qr-presention-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "qr-presention",
+        storageBucket: "qr-presention.firebasestorage.app",
+        messagingSenderId: "1030746972374",
+        appId: "1:1030746972374:web:ab66c5c75287a341c1e977",
+        measurementId: "G-PTMC1VZGXT"
+    };
 
-<script>
-    // 1. CEK APAKAH USER SUDAH LOGIN
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // 3. CEK LOGIN USER
     const sessionData = localStorage.getItem('userSession');
     if (!sessionData) {
         alert("Akses ditolak! Anda harus login terlebih dahulu.");
         window.location.href = 'index.html';
     }
 
-    // 2. PARSE DATA LOGIN KE HALAMAN
     const dataMahasiswa = JSON.parse(sessionData);
     document.getElementById('txtNama').innerText = dataMahasiswa.nama;
     document.getElementById('txtNim').innerText = dataMahasiswa.nim;
     document.getElementById('txtEmail').innerText = dataMahasiswa.email;
 
-    // 3. FUNGSI SCANNER (KETIKA QR BERHASIL DIBACA)
+    // 4. FUNGSI SCAN SUKSES -> KIRIM KE FIREBASE CLOUD
     function onScanSuccess(decodedText, decodedResult) {
-        // Hentikan kamera setelah sukses agar tidak memproses berulang kali
-        html5QrCode.stop().then(() => {
-            document.getElementById('result').innerText = "Memproses presensi...";
+        html5QrcodeScanner.clear();
+        document.getElementById('result').innerText = "Mengirim data presensi ke server cloud...";
 
-            if(decodedText === "KELAS_E_2026") {
-                document.getElementById('result').innerHTML = `🎉 PRESENSI SUKSES!<br>Selamat ${dataMahasiswa.nama} (${dataMahasiswa.nim}) tercatat Hadir.`;
-            } else {
-                document.getElementById('result').innerHTML = `<span style="color:red;">QR Code tidak valid!</span>`;
-            }
-        }).catch(err => {
-            console.error("Gagal menghentikan kamera", err);
-        });
+        // Validasi Token QR Kelas kamu
+        if (decodedText === "KELAS_E_2026") {
+            const sekarang = new Date();
+            const jamMenitDetik = sekarang.toLocaleTimeString('id-ID');
+
+            // Kirim data mahasiswa ke tabel 'presensi_kelas' di Firebase
+            push(ref(db, 'presensi_kelas'), {
+                nim: dataMahasiswa.nim,
+                nama: dataMahasiswa.nama,
+                waktu: jamMenitDetik
+            })
+            .then(() => {
+                document.getElementById('result').innerHTML = `🎉 PRESENSI SUKSES!<br>Selamat ${dataMahasiswa.nama} tercatat secara universal.`;
+            })
+            .catch((error) => {
+                document.getElementById('result').innerHTML = `<span style="color:red;">Gagal ke server: ${error.message}</span>`;
+            });
+
+        } else {
+            document.getElementById('result').innerHTML = `<span style="color:red;">QR Code tidak valid!</span>`;
+        }
     }
 
-    // ISI KODE BARU YANG DIGANTI TADI
-    const html5QrCode = new Html5Qrcode("reader");
-    const config = { fps: 10, qrbox: 250 };
+    // Jalankan Kamera Scanner
+    let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+    html5QrcodeScanner.render(onScanSuccess);
 
-    Html5Qrcode.getCameras().then(devices => {
-        if (devices && devices.length > 0) {
-            let cameraId = devices[0].id;
-            for (let device of devices) {
-                if (device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('environment')) {
-                    cameraId = device.id;
-                    break;
-                }
-            }
-            html5QrCode.start({ deviceId: cameraId }, config, onScanSuccess).catch(err => {
-                document.getElementById('result').innerHTML = `<span style="color:red;">Gagal memulai kamera: ${err}</span>`;
-            });
-        } else {
-            document.getElementById('result').innerHTML = `<span style="color:red;">Kamera tidak ditemukan!</span>`;
-        }
-    }).catch(err => {
-        document.getElementById('result').innerHTML = `<span style="color:red;">Izin kamera diblokir browser!</span>`;
-    });
-
-    // 4. FUNGSI LOGOUT
-    function logout() {
+    // Tempel fungsi logout agar bisa diakses global
+    window.logout = function() {
         localStorage.removeItem('userSession');
         window.location.href = 'index.html';
     }
 </script>
-</body>
-</html>
