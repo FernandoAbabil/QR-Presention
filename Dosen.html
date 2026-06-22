@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Scanner Kelas & Daftar Hadir</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 30px 20px; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        #qrcode { margin: 20px auto; display: inline-block; padding: 10px; background: #fff; border: 1px solid #ccc; }
+        
+        /* Styling Tabel Daftar Hadir */
+        .table-container { margin-top: 40px; text-align: left; }
+        h2 { border-bottom: 2px solid #007bff; padding-bottom: 10px; color: #007bff; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        th, td { padding: 12px 15px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .empty-row { text-align: center; color: #888; font-style: italic; }
+        .badge { background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>SILAHKAN SCAN UNTUK PRESENSI</h1>
+    <p style="font-size: 16px; color: #666;">Rentang NIM Valid: <strong>H1H025001 - H1H025035</strong></p>
+    
+    <div id="qrcode"></div>
+    
+    <p style="font-size: 18px; margin-top: 10px;">Total Hadir: <strong id="totalHadir">0</strong> Mahasiswa</p>
+
+    <div class="table-container">
+        <h2>👥 Daftar Hadir Mahasiswa (Real-time)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>NIM</th>
+                    <th>Nama Lengkap</th>
+                    <th>Waktu Presensi</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="tabelPresensi">
+                <tr id="noDataRow">
+                    <td colspan="5" class="empty-row">Belum ada mahasiswa yang melakukan presensi.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // 1. GENERATE QR CODE
+    const tokenPresensi = "KELAS_E_2026"; 
+    
+    new QRCode(document.getElementById("qrcode"), {
+        text: tokenPresensi,
+        width: 250,
+        height: 250
+    });
+
+    // Array lokal untuk menampung siapa saja yang sudah scan di sesi ini
+    let listHadir = [];
+
+    // 2. FUNGSI UNTUK MERENDER ULANG TABEL
+    function perbaruiTabel() {
+        const tbody = document.getElementById('tabelPresensi');
+        const totalHadirTxt = document.getElementById('totalHadir');
+        
+        // Update counter total
+        totalHadirTxt.innerText = listHadir.length;
+
+        if (listHadir.length === 0) {
+            tbody.innerHTML = `<tr id="noDataRow"><td colspan="5" class="empty-row">Belum ada mahasiswa yang melakukan presensi.</td></tr>`;
+            return;
+        }
+
+        // Kosongkan tabel sebelum diisi ulang
+        tbody.innerHTML = "";
+
+        // Masukkan data mahasiswa ke dalam baris tabel
+        listHadir.forEach((mhs, index) => {
+            const row = `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${mhs.nim}</strong></td>
+                    <td>${mhs.nama}</td>
+                    <td>${mhs.waktu}</td>
+                    <td><span class="badge">HADIR</span></td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+
+    // 3. MENDENGARKAN SINYAL DARI HALAMAN SCAN MAHASISWA
+    // Setiap kali ada aktivitas scan sukses di tab mahasiswa, fungsi ini akan menangkapnya
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'userSession' && e.newValue) {
+            const dataBaru = JSON.parse(e.newValue);
+            
+            // Ambil waktu saat ini
+            const sekarang = new Date();
+            const jamMenitDetik = sekarang.toLocaleTimeString('id-ID');
+
+            // Cek apakah mahasiswa ini sudah ada di daftar (menghindari duplikat data)
+            const sudahAda = listHadir.some(mhs => mhs.nim === dataBaru.nim);
+
+            if (!sudahAda) {
+                // Tambahkan data ke daftar hadir kelas
+                listHadir.push({
+                    nim: dataBaru.nim,
+                    nama: dataBaru.nama,
+                    waktu: jamMenitDetik
+                });
+                
+                // Refresh tampilan tabel
+                perbaruiTabel();
+            }
+        }
+    });
+
+    // Reset list hadir di layar setiap kali halaman Dosen ini di-refresh pertama kali
+    perbaruiTabel();
+</script>
+
+</body>
+</html>
