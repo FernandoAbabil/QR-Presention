@@ -1,11 +1,78 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🖥️ Dashboard Presensi Kelas (Dosen)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f4f6f9; color: #333; padding-top: 40px; }
+        .main-card { border: none; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background: white; padding: 30px; }
+        #qrcode { padding: 15px; background: white; border: 4px solid #007bff; border-radius: 16px; display: inline-block; box-shadow: 0 8px 20px rgba(0,123,255,0.15); }
+        .stat-box { background: linear-gradient(135deg, #1d976c, #93f9b9); color: white; border-radius: 12px; padding: 15px; display: inline-block; min-width: 200px; }
+        th { background-color: #f8f9fa !important; color: #555; font-weight: 600; text-transform: uppercase; font-size: 13px; }
+        td { vertical-align: middle; }
+    </style>
+</head>
+<body>
 
+<div class="container mb-5">
+    <div class="main-card text-center">
+        <h1 class="fw-bold text-primary mb-1">SILAHKAN SCAN UNTUK PRESENSI</h1>
+        <p class="text-muted mb-4">Mata Kuliah: Kelas E 2026 | Rentang NIM: H1H025001 - H1H025035</p>
+        
+        <div class="my-3">
+            <div id="qrcode"></div>
+        </div>
+        
+        <div class="my-4">
+            <div class="stat-box shadow-sm">
+                <span class="small d-block opacity-75"><i class="fa-solid fa-users me-1"></i> Total Hadir</span>
+                <span class="fs-2 fw-bold" id="totalHadir">0</span> <span class="small">Mahasiswa</span>
+            </div>
+        </div>
+
+        <div class="text-start mt-5">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                <h3 class="fw-bold m-0 text-secondary"><i class="fa-solid fa-clipboard-list text-primary me-2"></i>Daftar Hadir Real-Time</h3>
+                <button class="btn btn-warning fw-bold text-dark px-4 shadow-sm" onclick="window.hapusSemuaPresensi()">
+                    <i class="fa-solid fa-trash-can me-2"></i>Kosongkan Kelas
+                </button>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th width="80">No</th>
+                            <th width="200">NIM</th>
+                            <th>Nama Lengkap</th>
+                            <th width="200">Waktu Scan</th>
+                            <th width="120" class="text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelPresensi">
+                        <tr id="noDataRow">
+                            <td colspan="5" class="text-center text-muted py-5 italic bg-light rounded-3">
+                                <i class="fa-solid fa-hourglass-start d-block fs-2 mb-3 opacity-50"></i>
+                                Belum ada mahasiswa yang melakukan pemindaian QR Code.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script type="module">
-    // 1. IMPORT FIREBASE CDN MODUL
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // 2. CONFIG CONFIGURASI FIREBASE MILIKMU
     const firebaseConfig = {
         apiKey: "AIzaSyCUuXQDLLxX97PDJ1xaCkFPwAARAi2vJ8o",
         authDomain: "qr-presence-f8f14.firebaseapp.com",
@@ -13,24 +80,19 @@
         projectId: "qr-presence-f8f14",
         storageBucket: "qr-presence-f8f14.firebasestorage.app",
         messagingSenderId: "506287590811",
-        appId: "1:506287590811:web:8f180bf07b75dcaa33653e",
-        measurementId: "G-R3028BJMYS"
+        appId: "1:1030746972374:web:ab66c5c75287a341c1e977" // Gunakan appId valid bawaan config-mu
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // 3. GENERATE QR CODE KELAS
-    const tokenPresensi = "KELAS_A_TEKKOM_UNSOED_2026"; 
+    const tokenPresensi = "KELAS_E_2026"; 
     new QRCode(document.getElementById("qrcode"), {
         text: tokenPresensi,
-        width: 250,
-        height: 250
+        width: 220,
+        height: 220
     });
 
-    // 4. MENDENGAR DATA MASUK DARI INTERNETsecara REAL-TIME
-    // Setiap kali database di Firebase berubah, fungsi ini otomatis dijalankan browser laptop
     onValue(ref(db, 'presensi_kelas'), (snapshot) => {
         const data = snapshot.val();
         const tbody = document.getElementById('tabelPresensi');
@@ -38,11 +100,16 @@
 
         if (!data) {
             totalHadirTxt.innerText = "0";
-            tbody.innerHTML = `<tr id="noDataRow"><td colspan="5" class="empty-row">Belum ada mahasiswa yang melakukan presensi.</td></tr>`;
+            tbody.innerHTML = `
+                <tr id="noDataRow">
+                    <td colspan="5" class="text-center text-muted py-5 bg-light rounded-3">
+                        <i class="fa-solid fa-hourglass-start d-block fs-2 mb-3 opacity-50"></i>
+                        Belum ada mahasiswa yang melakukan pemindaian QR Code.
+                    </td>
+                </tr>`;
             return;
         }
 
-        // Ubah objek data dari firebase menjadi format list array
         const listHadir = Object.entries(data);
         totalHadirTxt.innerText = listHadir.length;
         tbody.innerHTML = "";
@@ -50,12 +117,14 @@
         listHadir.forEach(([keyId, mhs], index) => {
             const row = `
                 <tr>
-                    <td>${index + 1}</td>
-                    <td><strong>${mhs.nim}</strong></td>
-                    <td>${mhs.nama}</td>
-                    <td>${mhs.waktu}</td>
-                    <td>
-                        <button class="btn-danger-sm" onclick="hapusBarisCloud('${keyId}', '${mhs.nama}')">Hapus</button>
+                    <td><span class="badge bg-secondary rounded-pill">${index + 1}</span></td>
+                    <td><span class="font-monospace fw-bold">${mhs.nim}</span></td>
+                    <td class="fw-semibold text-dark">${mhs.nama}</td>
+                    <td><i class="fa-regular fa-clock me-1 text-muted"></i> ${mhs.waktu}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-light text-danger border shadow-sm" onclick="window.hapusBarisCloud('${keyId}', '${mhs.nama}')">
+                            <i class="fa-solid fa-user-minus"></i> Hapus
+                        </button>
                     </td>
                 </tr>
             `;
@@ -63,17 +132,17 @@
         });
     });
 
-    // 5. FUNGSI HAPUS SATU BARIS DATA DI CLOUD
     window.hapusBarisCloud = function(keyId, nama) {
         if (confirm(`Apakah Anda yakin ingin menghapus presensi ${nama}?`)) {
-            set(ref(db, 'presensi_kelas/' + keyId), null); // Set null artinya menghapus data di Firebase
+            set(ref(db, 'presensi_kelas/' + keyId), null);
         }
     }
 
-    // 6. FUNGSI CLEAR SEMUA DATA DI CLOUD
     window.hapusSemuaPresensi = function() {
         if (confirm("Apakah Anda yakin ingin mengosongkan seluruh daftar hadir di cloud server?")) {
-            set(ref(db, 'presensi_kelas'), null); // Hapus seluruh cabang tabel
+            set(ref(db, 'presensi_kelas'), null);
         }
     }
 </script>
+</body>
+</html>
