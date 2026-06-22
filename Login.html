@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Mahasiswa</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 50px 20px; text-align: center; }
+        .form-container { background: white; padding: 30px; max-width: 400px; margin: 0 auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #0069d9; }
+        .link { margin-top: 15px; display: block; color: #28a745; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>Login Presensi</h2>
+    <form id="loginForm">
+        <input type="email" id="emailLogin" placeholder="Masukkan Email Terdaftar" required>
+        <button type="submit">Masuk</button>
+    </form>
+    <a class="link" href="daftar.html">Belum punya akun? Daftar di sini</a>
+</div>
+
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('emailLogin').value;
+        const dataTerdaftar = localStorage.getItem(email);
+
+        if (dataTerdaftar) {
+            // Jika email ketemu, simpan sesi login aktif saat ini
+            localStorage.setItem('userSession', dataTerdaftar);
+            alert("Login Sukses!");
+            window.location.href = 'mahasiswa.html'; // Pindah ke halaman scan
+        } else {
+            alert("Email tidak terdaftar! Silahkan daftar terlebih dahulu.");
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendaftaran Akun Mahasiswa</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 50px 20px; text-align: center; }
+        .form-container { background: white; padding: 30px; max-width: 400px; margin: 0 auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #218838; }
+        .link { margin-top: 15px; display: block; color: #007bff; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>Daftar Akun Presensi</h2>
+    <form id="daftarForm">
+        <input type="email" id="email" placeholder="Masukkan Email Kampus" required>
+        <input type="text" id="nama" placeholder="Masukkan Nama Lengkap" required>
+        <input type="text" id="nim" placeholder="Masukkan NIM (Contoh: H1H025015)" required>
+        <button type="submit">Daftar Sekarang</button>
+    </form>
+    <a class="link" href="login.html">Sudah punya akun? Login di sini</a>
+</div>
+
+<script>
+    document.getElementById('daftarForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const nama = document.getElementById('nama').value;
+        const nim = document.getElementById('nim').value;
+
+        // Simpan data ke localStorage (Simulasi Database)
+        const dataUser = { email: email, nama: nama, nim: nim };
+        localStorage.setItem(email, JSON.stringify(dataUser));
+
+        alert("Pendaftaran Berhasil! Silahkan login.");
+        window.location.href = 'login.html'; // Pindah ke halaman login
+    });
+</script>
+
+</body>
+</html>
