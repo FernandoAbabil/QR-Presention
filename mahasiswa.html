@@ -95,7 +95,7 @@
 
         if (decodedText === "KELAS_E_2026") {
             const sekarang = new Date();
-            const jamMenitDetik = sekarang.toLocaleTimeString('id-ID');
+            const jamMenitDetik = Clinical = sekarang.toLocaleTimeString('id-ID');
 
             push(ref(db, 'presensi_kelas'), {
                 nim: dataMahasiswa.nim,
@@ -123,11 +123,13 @@
         window.location.href = 'index.html';
     }
 
-    // Aksi tombol Hapus Akun pendaftaran lokal (Reset)
-    window.clearAkunTotal = function() {
-        localStorage.clear(); // Menghapus total seluruh local storage akun pendaftaran di HP
-        alert("Akun pendaftaran berhasil dihapus dari HP ini!");
-        window.location.href = 'index.html';
+    // --- PERBAIKAN DI SINI (Nama fungsi disamakan menjadi hapusAkunTotal) ---
+    window.hapusAkunTotal = function() {
+        if (confirm("Apakah Anda yakin ingin menghapus total akun pendaftaran di perangkat ini? Anda harus mendaftar ulang setelah ini.")) {
+            localStorage.clear(); // Menghapus total seluruh memori pendaftaran di HP/Laptop tersebut
+            alert("Akun pendaftaran berhasil dihapus dari HP ini!");
+            window.location.href = 'index.html';
+        }
     }
 </script>
 </body>
